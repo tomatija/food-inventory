@@ -1,0 +1,4 @@
+name: smart-fridge
+
+include:
+  - ./services/inventory/compose.yaml

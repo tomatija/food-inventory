@@ -1,0 +1,43 @@
+
+services:
+  inventory-api:
+    build: .
+    ports:
+      - "8000:80"
+    environment:
+      DB_HOST: inventory-db
+      DB_PORT: "5432"
+      DB_NAME: ${INVENTORY_DB_NAME}
+      DB_USER: ${INVENTORY_DB_USER}
+      DB_PASSWORD: ${INVENTORY_DB_PASSWORD}
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+    networks:
+      - default
+      - inventory-private
+    restart: unless-stopped
+
+  inventory-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${INVENTORY_DB_NAME}
+      POSTGRES_USER: ${INVENTORY_DB_USER}
+      POSTGRES_PASSWORD: ${INVENTORY_DB_PASSWORD}
+    volumes:
+      - inventory-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - inventory-private
+    restart: unless-stopped
+
+networks:
+  inventory-private:
+    internal: true
+
+volumes:
+  inventory-data:
